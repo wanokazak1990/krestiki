@@ -1,0 +1,81 @@
+version: "3"
+services:  
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+    - ./docker/nginx:/etc/nginx/conf.d
+    - ./docker/nginx/logs:/var/log/nginx/
+    - ./app/:/var/www
+    ports:
+    - "8080:80"
+    - "443:443"
+    links: 
+      - php-fpm
+      - php-cli
+
+  php-fpm:
+    container_name: php-fpm
+    build:
+      context: ./
+      dockerfile: docker/php-fpm.docker
+    volumes:
+      - ./app/:/var/www
+    links: 
+      - mysql
+    environment:
+      - "UPLOAD_LIMIT=20M"
+      - "DB_PORT=3306"
+      - "DB_HOST=mysql"
+
+  php-cli:
+    container_name: php-cli
+    build:
+      context: ./
+      dockerfile: docker/php-cli.docker
+    volumes:
+      - ./app/:/var/www
+    links: 
+      - mysql
+    environment:
+      - "UPLOAD_LIMIT=20M"
+      - "DB_PORT=3306"
+      - "DB_HOST=mysql"
+    tty: true
+
+  node:
+    container_name: node
+    build:
+      context: ./
+      dockerfile: docker/node.docker
+    volumes:
+      - ./app/:/var/www
+    tty: true
+
+  mysql:
+    container_name: mysql
+    image: mysql:5.7
+    command: --sql_mode="ONLY_FULL_GROUP_BY"
+    volumes: 
+      - ./docker/images/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=app
+      - MYSQL_HOST= mysql
+      - MYSQL_USER=app
+      - MYSQL_PASSWORD=secret
+      - MYSQL_PORT=3306
+    ports:
+      - "33061:3306"
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: corbinu/docker-phpmyadmin
+    ports:
+        - 8681:80
+    environment:
+        MYSQL_USERNAME: app
+        MYSQL_ROOT_PASSWORD: secret
+        MYSQL_PORT_3306_TCP_ADDR: mysql
+
+  
