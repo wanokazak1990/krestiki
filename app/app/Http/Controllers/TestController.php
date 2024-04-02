@@ -9,7 +9,7 @@ class TestController extends Controller
     public function index()
     {
         return response()->json([
-            'data' => 1
+            'data' => date('d.m.Y (H:i)'),
         ]);
     }
 }
